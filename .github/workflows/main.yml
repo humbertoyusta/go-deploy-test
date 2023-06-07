@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: self-hosted
     steps:
       - name: Checkout code
@@ -17,26 +17,49 @@ jobs:
         with:
           go-version: 1.20.4
 
-      - name: Test
+      - name: Run Tests
         run: go test .
+
+  build:
+    needs: test
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.20.4
 
       - name: Build
         run: go build -o main
 
-      - name: Archive production artifacts
+      - name: Archive main artifact
         uses: actions/upload-artifact@v2
         with:
           name: main
           path: main
 
+      - name: Archive goapp.service artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: goapp.service
+          path: goapp.service
+
   deploy:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Download artifact
+      - name: Download main artifact
         uses: actions/download-artifact@v2
         with:
           name: main
+
+      - name: Download goapp.service artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: goapp.service
 
       - name: Set up SSH
         run: |
